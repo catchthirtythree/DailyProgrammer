@@ -107,8 +107,7 @@ public class C0198H {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		@SuppressWarnings("resource") 
-		Scanner keyboard = new Scanner(System.in).useDelimiter("\\r\\n");
+		Scanner keyboard = new Scanner(System.in);
 		List<String> words = getLinesFromFile("ext/" + C0198H.class.getSimpleName());
 		
 		Trie trie = new Trie() {{
@@ -131,40 +130,8 @@ public class C0198H {
 			System.out.println("--------------------------------------");
 			System.out.printf("Current letters: %s\n", hand.replaceAll(".(?=.)", "$0 "));
 			
-			boolean exists = false;
-			do {
-				System.out.print("Choose a word: ");
-				user = keyboard.nextLine();
-				
-				if (possibilities.contains(user))
-					exists = true;
-				
-				System.out.printf("%s\n\n", exists ? user + " exists." : user + " does not exist, try again.");
-			} while (!exists);
-			
-			switch (difficulty) {
-			case EASY:
-				comp = possibilities.get((int) (Math.random() * possibilities.size()));
-				break;
-			case HARD:
-				List<String> length = new ArrayList<String>();
-				int max = 0;
-				for (int i = 0; i < possibilities.size(); ++i) {
-					String s = possibilities.get(i);
-					if (s.length() > max) {
-						length.clear();
-						length.add(s);
-						max = s.length();
-					} else if (s.length() == max) {
-						length.add(s);
-					}
-				}
-				
-				comp = length.get((int) (Math.random() * length.size()));
-				break;
-			default:
-				comp = "";
-			}
+			user = chooseWord(keyboard, possibilities);
+			comp = chooseAIWord(keyboard, possibilities, difficulty);
 			
 			List<Character> p = new ArrayList<Character>(), a = new ArrayList<Character>();
 			for (char c : user.toCharArray()) p.add(c);
@@ -177,6 +144,50 @@ public class C0198H {
 		}
 		
 		System.out.printf("\nFinal Score -> You: %d Computer: %d\n", p_score, c_score);
+	}
+	
+	private static String chooseAIWord(Scanner keyboard, List<String> possibilities, Difficulty difficulty) {
+		String comp = "";
+		
+		switch (difficulty) {
+		case EASY:
+			comp = possibilities.get((int) (Math.random() * possibilities.size()));
+			break;
+		case HARD:
+			List<String> length = new ArrayList<String>();
+			int max = 0;
+			for (int i = 0; i < possibilities.size(); ++i) {
+				String s = possibilities.get(i);
+				if (s.length() > max) {
+					length.clear();
+					length.add(s);
+					max = s.length();
+				} else if (s.length() == max) {
+					length.add(s);
+				}
+			}
+			
+			comp = length.get((int) (Math.random() * length.size()));
+			break;
+		}
+		
+		return comp;
+	}
+	
+	private static String chooseWord(Scanner keyboard, List<String> possibilities) {
+		String user;
+		boolean exists = false;
+		do {
+			System.out.print("Choose a word: ");
+			user = keyboard.nextLine();
+			
+			if (possibilities.contains(user))
+				exists = true;
+			
+			System.out.printf("%s\n\n", exists ? user + " exists." : user + " does not exist, try again.");
+		} while (!exists);
+		
+		return user;
 	}
 	
 	private static int chooseRounds(Scanner keyboard) {
