@@ -5,14 +5,14 @@
  */
 package challenges.java;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
+
+import challenges.java.util.Util;
 
 public class C0198H {
 	public static class Trie {
@@ -108,7 +108,7 @@ public class C0198H {
 	
 	public static void main(String[] args) throws IOException {
 		Scanner keyboard = new Scanner(System.in);
-		List<String> words = getLinesFromFile("ext/" + C0198H.class.getSimpleName());
+		List<String> words = Util.getLinesFromFile(Util.WORDLIST);
 		
 		Trie trie = new Trie() {{
 			words.forEach(word -> add(word));
@@ -287,22 +287,4 @@ public class C0198H {
 	}
 	
 	private static final char[] vowels = "aeiou".toCharArray(), consonants = "bcdfghjklmnpqrstvwxzy".toCharArray();
-	
-	/**
-	 * Retrieve word list from from file.
-	 * @param filename
-	 * @return
-	 * @throws IOException
-	 */
-	public static List<String> getLinesFromFile(String filename) throws IOException {
-		List<String> lines = new ArrayList<String>();
-		BufferedReader reader = new BufferedReader(new FileReader(filename));
-		
-		String line;
-		while ((line = reader.readLine()) != null) {
-			lines.add(line);
-		} reader.close();
-		
-		return lines;
-	}
 }

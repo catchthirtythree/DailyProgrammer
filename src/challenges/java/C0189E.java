@@ -5,18 +5,17 @@
  */
 package challenges.java;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
+import challenges.java.util.Util;
+
 public class C0189E {
 	public static void main(String[] args) throws IOException {
 		@SuppressWarnings("resource") Scanner keyboard = new Scanner(System.in).useDelimiter("\\r\\n");
-		List<String> words = getWordsList(FILENAME);
+		List<String> words = Util.getLinesFromFile(Util.WORDLIST);
 
 		// Prompt user for a difficulty.
 		Difficulty diff = chooseDifficulty(keyboard);
@@ -66,24 +65,6 @@ public class C0189E {
 			System.out.printf("\t%d: %s\n", sc.ordinal(), sc.name());
 		System.out.print("Input a command: ");
 	}
-	
-	public static String getFilePath(String filename) {
-		return C0189E.class.getResource(filename).getFile();
-	}
-	
-	public static List<String> getWordsList(String filename) throws IOException {
-		List<String> lines = new ArrayList<String>();
-		BufferedReader reader = new BufferedReader(new FileReader(filename));
-		
-		String line;
-		while ((line = reader.readLine()) != null) {
-			lines.add(line);
-		} reader.close();
-		
-		return lines;
-	}
-	
-	private static final String FILENAME = "ext/" + C0189E.class.getSimpleName();
 }
 
 enum Difficulty {
