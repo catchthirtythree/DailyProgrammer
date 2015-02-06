@@ -8,8 +8,10 @@ package challenges.java;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -106,89 +108,136 @@ public class C0198H {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		Scanner keyboard = new Scanner(System.in);
+		Scanner keyboard = new Scanner(System.in).useDelimiter("\\r\\n");
 		List<String> words = getLinesFromFile("ext/" + C0198H.class.getSimpleName());
 		
 		Trie trie = new Trie() {{
 			words.forEach(word -> add(word));
 		}};
 
-		String hand;
+		String hand, comp, user;
+		List<String> possibilities;
 		int turn = 0, p_score = 0, c_score = 0;
-		System.out.println("Welcome to Words against Enemies.");
-
-		hand = generateHand(14);
-		System.out.printf("\nTurn %d -- Points -> You: %d Computer: %d\n", turn, p_score, c_score);
-		System.out.println("--------------------------------------");
-		System.out.printf("Current letters: %s\n", hand.replaceAll(".(?=.)", "$0 "));
+		System.out.println("Welcome to Words against Enemies.\n");
 		
-		/*
-		 Welcome to Words with Enemies!
-		 Select an AI difficulty:
-		 1) easy
-		 2) Hard
-		 --> 1
-		 You have selected Easy! - Let's begin!
-
-		 Turn 1 -- Points You: 0 Computer: 0
-		 -----------------------------------------
-		 Your letters: a b c d e k l m o p t u
-		 Your word-> rekt
-		 I am sorry but you cannot spell rekt with your letters. Try again.
-		 Your letters: a b c d e k l m o p t u
-		 Your word-> top
-		 Valid Word! Open Fire!!!!
-		 AI selects "potluck"
-
-		 top vs potluck -- Computer wins.
-		 You had 0 letters left over - you score 0 points
-		 AI had 4 letters left over - AI score 4 points
-
-		 Turn 2 -- Points You: 0 Computer: 4
-		 -----------------------------------------
-		 Your letters: e i o k a l m q t u w y
-		 */
+		Difficulty difficulty = chooseDifficulty(keyboard);
+		int rounds = chooseRounds(keyboard);
 		
-		System.out.print("Choose a word: ");
-		String line = keyboard.nextLine();
-		
-		List<String> poss = trie.findAll(line);
-		System.out.printf("The word '%s' can be found in the dictionary: %s", line, poss.contains(line));
+		while (rounds > turn) {
+			hand = generateHand(14);
+			possibilities = trie.findAll(hand);
+			
+			System.out.printf("\nTurn %d -- Points -> You: %d Computer: %d\n", turn++, p_score, c_score);
+			System.out.println("--------------------------------------");
+			System.out.printf("Current letters: %s\n", hand.replaceAll(".(?=.)", "$0 "));
+			
+			boolean exists = false;
+			do {
+				System.out.print("Choose a word: ");
+				user = keyboard.nextLine();
+				
+				if (possibilities.contains(user))
+					exists = true;
+				
+				System.out.printf("%s\n", exists ? user + " exists." : user + " does not exist, try again.");
+			} while (!exists);
+			
+			switch (difficulty) {
+			case EASY:
+				comp = possibilities.get((int) (Math.random() * possibilities.size()));
+				break;
+			case HARD:
+				List<String> length = new ArrayList<String>();
+				int max = 0;
+				for (int i = 0; i < possibilities.size(); ++i) {
+					String s = possibilities.get(i);
+					if (s.length() > max) {
+						length.clear();
+						length.add(s);
+						max = s.length();
+					} else if (s.length() == max) {
+						length.add(s);
+					}
+				}
+				
+				comp = length.get((int) (Math.random() * length.size()));
+				break;
+			default:
+				comp = "";
+			}
+			
+			// fight(asList(user), asList(comp));
+		}
 	}
 	
-	public static Difficulty chooseDifficulty(Scanner keyboard) {
-		return null;
+	private static int chooseRounds(Scanner keyboard) {
+		while (true) {
+			System.out.print("Choose the amount of rounds to play: ");
+			
+			try {
+				int input = keyboard.nextInt();
+				keyboard.nextLine();
+				return input;
+			} catch (InputMismatchException e) {
+				keyboard.next();
+				
+				System.out.println("Invalid Input, please enter an Integer.");
+			}
+		}
+	}
+	
+	private static Difficulty chooseDifficulty(Scanner keyboard) {
+		while (true) {
+			displayDifficulties();
+			
+			try {
+				return Difficulty.values()[keyboard.nextInt()];
+			} catch (InputMismatchException e) {
+				keyboard.next();
+				
+				System.out.println("Invalid Input, please enter an Integer.");
+			} catch (ArrayIndexOutOfBoundsException e) {
+				System.out.println("Please enter an integer between 0 and " + (Difficulty.values().length - 1) + ".");
+			} System.out.println();
+		}
+	}
+	
+	private static void displayDifficulties() {
+		System.out.println("Choose the AI difficulty:");
+		for (Difficulty sc : Difficulty.values())
+			System.out.printf("\t%d: %s\n", sc.ordinal(), sc.name());
+		System.out.print("Input a number: ");
 	}
 	
 	private static enum Difficulty {
-		EASY, MEDIUM, HARD;
+		EASY, HARD;
 	}
 	
 	/**
 	 * Words with Enemies fight method.
-	 * @param w_player
-	 * @param w_ai
+	 * @param player
+	 * @param ai
 	 * @return
 	 */
-	public static BattleResult fight(List<Character> w_player, List<Character> w_ai) {
-		String t_player = w_player.toString(), t_ai = w_ai.toString();
+	public static BattleResult fight(List<Character> player, List<Character> ai) {
+		String t_player = player.toString(), t_ai = ai.toString();
 		
-		for (int i = 0; i < w_player.size(); ++i) {
-			Character c = w_player.get(i);
+		for (int i = 0; i < player.size(); ++i) {
+			Character c = player.get(i);
 			int index;
-			if ((index = w_ai.indexOf(c)) >= 0) {
-				w_player.remove(i--);
-				w_ai.remove(index);
+			if ((index = ai.indexOf(c)) >= 0) {
+				player.remove(i--);
+				ai.remove(index);
 			}
 		}
 		
 		int s_size = (t_player.length() > t_ai.length() ? t_player.length() : t_ai.length());
 		System.out.printf("Battle:\nplayer : %" + s_size + "s -> %s\nai     : %" + s_size + "s -> %s\n",
-				t_player, w_player, 
-				t_ai, w_ai
+				t_player, player, 
+				t_ai, ai
 		);
 		
-		return w_player.size() == w_ai.size() ? BattleResult.TIE : w_player.size() > w_ai.size() ? BattleResult.WIN : BattleResult.LOSS;
+		return player.size() == ai.size() ? BattleResult.TIE : player.size() > ai.size() ? BattleResult.WIN : BattleResult.LOSS;
 	}
 	
 	private static enum BattleResult { WIN, LOSS, TIE; }
