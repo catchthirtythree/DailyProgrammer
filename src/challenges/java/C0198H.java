@@ -8,6 +8,7 @@ package challenges.java;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
@@ -126,67 +127,64 @@ public class C0198H {
 			hand = generateHand(14);
 			possibilities = trie.findAll(hand);
 			
+			Collections.sort(possibilities, new Comparator<String>() {
+				@Override public int compare(String arg0, String arg1) {
+					return Integer.compare(arg0.length(), arg1.length());
+				}
+			});
+			
 			System.out.printf("Turn %d -- You: %d Computer: %d\n", turn++, p_score, c_score);
 			System.out.println("--------------------------------------");
-			System.out.printf("Current letters: %s\n", hand.replaceAll(".(?=.)", "$0 "));
+			System.out.printf("Current hand: %s\n", hand.replaceAll(".(?=.)", "$0 "));
 			
 			user = chooseWord(keyboard, possibilities);
 			comp = chooseAIWord(keyboard, possibilities, difficulty);
 			
-			List<Character> p = new ArrayList<Character>(), a = new ArrayList<Character>();
-			for (char c : user.toCharArray()) p.add(c);
-			for (char c : comp.toCharArray()) a.add(c);
+			List<Character> p = new ArrayList<Character>(), c = new ArrayList<Character>();
+			for (char ch : user.toCharArray()) p.add(ch);
+			for (char ch : comp.toCharArray()) c.add(ch);
 			
-			fight(p, a);
+			fight(p, c);
 			
 			p_score += p.size();
-			c_score += a.size();
+			c_score += c.size();
 		}
 		
 		System.out.printf("Final Score -> You: %d Computer: %d\n", p_score, c_score);
 	}
 	
 	private static String chooseAIWord(Scanner keyboard, List<String> possibilities, Difficulty difficulty) {
-		String comp = "";
-		
 		switch (difficulty) {
-		case EASY:
-			comp = possibilities.get((int) (Math.random() * possibilities.size()));
-			break;
-		case HARD:
-			List<String> length = new ArrayList<String>();
-			int max = 0;
-			for (int i = 0; i < possibilities.size(); ++i) {
-				String s = possibilities.get(i);
-				if (s.length() > max) {
-					length.clear();
-					length.add(s);
-					max = s.length();
-				} else if (s.length() == max) {
-					length.add(s);
-				}
-			}
+			case EASY:
+				return possibilities.get(0);
 			
-			comp = length.get((int) (Math.random() * length.size()));
-			break;
+			case MEDIUM:
+				return possibilities.get(possibilities.size() / 2);
+			
+			case HARD:
+				return possibilities.get(possibilities.size() - 1);
+				
+			case RANDOM:
+				return possibilities.get((int) (Math.random() * possibilities.size()));
+				
+			default:
+				return "";
 		}
-		
-		return comp;
 	}
 	
 	private static String chooseWord(Scanner keyboard, List<String> possibilities) {
 		String user;
-		boolean exists = false;
+		boolean valid = false;
 		
 		do {
 			System.out.print("Choose a word: ");
 			user = keyboard.nextLine();
 			
 			if (possibilities.contains(user))
-				exists = true;
+				valid = true;
 			
-			System.out.printf("%s\n\n", exists ? user + " is a valid word." : user + " is not a valid word, try again.");
-		} while (!exists);
+			System.out.printf("%s\n\n", valid ? user + " is a valid word." : user + " is not a valid word, try again.");
+		} while (!valid);
 		
 		return user;
 	}
@@ -247,15 +245,9 @@ public class C0198H {
 	}
 	
 	private static enum Difficulty {
-		EASY, HARD;
+		EASY, MEDIUM, HARD, RANDOM;
 	}
 	
-	/**
-	 * Words with Enemies fight method.
-	 * @param player
-	 * @param ai
-	 * @return
-	 */
 	public static BattleResult fight(List<Character> player, List<Character> ai) {
 		String temp_player = player.toString(), temp_ai = ai.toString();
 		
@@ -279,13 +271,9 @@ public class C0198H {
 	
 	private static enum BattleResult { WIN, LOSS, TIE; }
 	
-	/**
-	 * Words with Enemies random hand generator (1/3 vowels, 2/3 consonants).
-	 * @param size
-	 * @return
-	 */
 	public static String generateHand(int size) {
 		List<Character> characters = new ArrayList<Character>();
+		char[] vowels = "aeiou".toCharArray(), consonants = "bcdfghjklmnpqrstvwxzy".toCharArray();
 		
 		for (int i = 0; i < size; ++i) {
 			if (i % 3 == 0)
@@ -302,6 +290,4 @@ public class C0198H {
 		
 		return sb.toString();
 	}
-	
-	private static final char[] vowels = "aeiou".toCharArray(), consonants = "bcdfghjklmnpqrstvwxzy".toCharArray();
 }
