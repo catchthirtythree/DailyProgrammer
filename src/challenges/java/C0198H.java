@@ -126,7 +126,7 @@ public class C0198H {
 			hand = generateHand(14);
 			possibilities = trie.findAll(hand);
 			
-			System.out.printf("\nTurn %d -- Points -> You: %d Computer: %d\n", turn++, p_score, c_score);
+			System.out.printf("Turn %d -- You: %d Computer: %d\n", turn++, p_score, c_score);
 			System.out.println("--------------------------------------");
 			System.out.printf("Current letters: %s\n", hand.replaceAll(".(?=.)", "$0 "));
 			
@@ -143,7 +143,7 @@ public class C0198H {
 			c_score += a.size();
 		}
 		
-		System.out.printf("\nFinal Score -> You: %d Computer: %d\n", p_score, c_score);
+		System.out.printf("Final Score -> You: %d Computer: %d\n", p_score, c_score);
 	}
 	
 	private static String chooseAIWord(Scanner keyboard, List<String> possibilities, Difficulty difficulty) {
@@ -177,6 +177,7 @@ public class C0198H {
 	private static String chooseWord(Scanner keyboard, List<String> possibilities) {
 		String user;
 		boolean exists = false;
+		
 		do {
 			System.out.print("Choose a word: ");
 			user = keyboard.nextLine();
@@ -184,42 +185,58 @@ public class C0198H {
 			if (possibilities.contains(user))
 				exists = true;
 			
-			System.out.printf("%s\n\n", exists ? user + " exists." : user + " does not exist, try again.");
+			System.out.printf("%s\n\n", exists ? user + " is a valid word." : user + " is not a valid word, try again.");
 		} while (!exists);
 		
 		return user;
 	}
 	
 	private static int chooseRounds(Scanner keyboard) {
-		while (true) {
+		int choice = 0;
+		boolean valid = false;
+		
+		do {
 			System.out.print("Choose the amount of rounds to play: ");
 			
 			try {
-				int input = keyboard.nextInt();
-				keyboard.nextLine();
-				return input;
+				choice = keyboard.nextInt();
+				valid = true;
 			} catch (InputMismatchException e) {
 				keyboard.next();
 				
 				System.out.println("Invalid Input, please enter an Integer.");
+			} finally {
+				keyboard.nextLine();
+				System.out.println();
 			}
-		}
+		} while (!valid);
+		
+		return choice;
 	}
 	
 	private static Difficulty chooseDifficulty(Scanner keyboard) {
-		while (true) {
+		Difficulty difficulty = null;
+		boolean valid = false;
+		
+		do {
 			displayDifficulties();
 			
 			try {
-				return Difficulty.values()[keyboard.nextInt()];
+				difficulty = Difficulty.values()[keyboard.nextInt()];
+				valid = true;
 			} catch (InputMismatchException e) {
 				keyboard.next();
 				
 				System.out.println("Invalid Input, please enter an Integer.");
 			} catch (ArrayIndexOutOfBoundsException e) {
 				System.out.println("Please enter an integer between 0 and " + (Difficulty.values().length - 1) + ".");
-			} System.out.println();
-		}
+			} finally {
+				keyboard.nextLine();
+				System.out.println();
+			}
+		} while (!valid);
+		
+		return difficulty;
 	}
 	
 	private static void displayDifficulties() {
@@ -252,7 +269,7 @@ public class C0198H {
 		}
 		
 		int s_size = (temp_player.length() > temp_ai.length() ? temp_player.length() : temp_ai.length());
-		System.out.printf("Battle:\nplayer : %" + s_size + "s -> %s\nai     : %" + s_size + "s -> %s\n",
+		System.out.printf("Battle:\nplayer : %" + s_size + "s -> %s\nai     : %" + s_size + "s -> %s\n\n",
 				temp_player, player, 
 				temp_ai, ai
 		);
