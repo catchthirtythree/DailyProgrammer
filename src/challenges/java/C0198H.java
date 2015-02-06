@@ -16,6 +16,10 @@ import java.util.Scanner;
 import challenges.java.util.Util;
 
 public class C0198H {
+	private static enum BattleResult { WIN, LOSS, TIE; }
+	
+	private static enum Difficulty { EASY, MEDIUM, HARD, RANDOM; }
+
 	public static class Trie {
 		public Node root;
 
@@ -52,7 +56,7 @@ public class C0198H {
 	    	node.word = true;
 	    }
 	    
-	    public boolean search(String data) {
+	    public boolean exists(String data) {
 	    	Node node = root;
 	    	
 	    	int length = data.length();
@@ -83,6 +87,10 @@ public class C0198H {
 	    	return words;
 	    }
 	    
+	    private static int convertCharToInt(char c) {
+	    	return Character.toLowerCase(c) - 97;
+	    }
+	    
 	    private void findAll(String data, List<String> words, Node next, String curr) {
 	    	if (next.word) words.add(curr); 
 	    	
@@ -95,11 +103,6 @@ public class C0198H {
 	    	}
 	    }
 	    
-	    private static int convertCharToInt(char c) {
-	    	return Character.toLowerCase(c) - 97;
-	    }
-	    
-	    /* http://stackoverflow.com/posts/18166130/revisions */
 	    private String removeDuplicates(String word){
 	        return word.replaceAll("(.)(?=.*\\1)", "");
 	    }
@@ -244,11 +247,7 @@ public class C0198H {
 		System.out.print("Input a number: ");
 	}
 	
-	private static enum Difficulty {
-		EASY, MEDIUM, HARD, RANDOM;
-	}
-	
-	public static BattleResult fight(List<Character> player, List<Character> ai) {
+	private static BattleResult fight(List<Character> player, List<Character> ai) {
 		String temp_player = player.toString(), temp_ai = ai.toString();
 		
 		for (int i = 0; i < player.size(); ++i) {
@@ -269,9 +268,7 @@ public class C0198H {
 		return player.size() == ai.size() ? BattleResult.TIE : player.size() > ai.size() ? BattleResult.WIN : BattleResult.LOSS;
 	}
 	
-	private static enum BattleResult { WIN, LOSS, TIE; }
-	
-	public static String generateHand(int size) {
+	private static String generateHand(int size) {
 		List<Character> characters = new ArrayList<Character>();
 		char[] vowels = "aeiou".toCharArray(), consonants = "bcdfghjklmnpqrstvwxzy".toCharArray();
 		
