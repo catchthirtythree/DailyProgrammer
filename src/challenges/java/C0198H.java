@@ -8,7 +8,6 @@ package challenges.java;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.InputMismatchException;
@@ -108,6 +107,7 @@ public class C0198H {
 	}
 	
 	public static void main(String[] args) throws IOException {
+		@SuppressWarnings("resource") 
 		Scanner keyboard = new Scanner(System.in).useDelimiter("\\r\\n");
 		List<String> words = getLinesFromFile("ext/" + C0198H.class.getSimpleName());
 		
@@ -139,7 +139,7 @@ public class C0198H {
 				if (possibilities.contains(user))
 					exists = true;
 				
-				System.out.printf("%s\n", exists ? user + " exists." : user + " does not exist, try again.");
+				System.out.printf("%s\n\n", exists ? user + " exists." : user + " does not exist, try again.");
 			} while (!exists);
 			
 			switch (difficulty) {
@@ -166,8 +166,17 @@ public class C0198H {
 				comp = "";
 			}
 			
-			// fight(asList(user), asList(comp));
+			List<Character> p = new ArrayList<Character>(), a = new ArrayList<Character>();
+			for (char c : user.toCharArray()) p.add(c);
+			for (char c : comp.toCharArray()) a.add(c);
+			
+			fight(p, a);
+			
+			p_score += p.size();
+			c_score += a.size();
 		}
+		
+		System.out.printf("\nFinal Score -> You: %d Computer: %d\n", p_score, c_score);
 	}
 	
 	private static int chooseRounds(Scanner keyboard) {
@@ -220,7 +229,7 @@ public class C0198H {
 	 * @return
 	 */
 	public static BattleResult fight(List<Character> player, List<Character> ai) {
-		String t_player = player.toString(), t_ai = ai.toString();
+		String temp_player = player.toString(), temp_ai = ai.toString();
 		
 		for (int i = 0; i < player.size(); ++i) {
 			Character c = player.get(i);
@@ -231,10 +240,10 @@ public class C0198H {
 			}
 		}
 		
-		int s_size = (t_player.length() > t_ai.length() ? t_player.length() : t_ai.length());
+		int s_size = (temp_player.length() > temp_ai.length() ? temp_player.length() : temp_ai.length());
 		System.out.printf("Battle:\nplayer : %" + s_size + "s -> %s\nai     : %" + s_size + "s -> %s\n",
-				t_player, player, 
-				t_ai, ai
+				temp_player, player, 
+				temp_ai, ai
 		);
 		
 		return player.size() == ai.size() ? BattleResult.TIE : player.size() > ai.size() ? BattleResult.WIN : BattleResult.LOSS;
