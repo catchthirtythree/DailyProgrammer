@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Util {
+	public static final String WORDLIST = "ext/wordlist.txt";
+	
 	/**
 	 * Retrieve line from file, return list.
 	 * @param filename
