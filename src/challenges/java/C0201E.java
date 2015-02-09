@@ -1,3 +1,8 @@
+/**
+ * @author Michael
+ * 
+ * http://www.reddit.com/r/dailyprogrammer/comments/2vc5xq/20150209_challenge_201_easy_counting_the_days/
+ */
 package challenges.java;
 
 import java.time.LocalDate;
