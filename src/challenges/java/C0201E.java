@@ -8,6 +8,7 @@ public class C0201E {
 		String date = String.join("-", args);
 		
 		LocalDate from = LocalDate.now();
+		/* Pre: month/day must have a leading 0. */
 		LocalDate to = LocalDate.parse(date);
 		
 		System.out.printf("There are %d days between %s and %s.", ChronoUnit.DAYS.between(from, to), from, to);
