@@ -18,7 +18,7 @@ import challenges.java.util.Util;
 public class C0198H {
 	private static enum BattleResult { WIN, LOSS, TIE; }
 	
-	private static enum Difficulty { EASY, MEDIUM, HARD, RANDOM; }
+	private static enum Difficulty { EASY, MEDIUM, HARD, IMPOSSIBLE, RANDOM; }
 
 	public static class Trie {
 		public Node root;
@@ -165,6 +165,9 @@ public class C0198H {
 				return possibilities.get(possibilities.size() / 2);
 			
 			case HARD:
+				return possibilities.get((int) (Math.random() * possibilities.size() / 2) + possibilities.size() / 2);
+				
+			case IMPOSSIBLE:
 				return possibilities.get(possibilities.size() - 1);
 				
 			case RANDOM:
