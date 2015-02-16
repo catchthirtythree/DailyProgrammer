@@ -6,6 +6,7 @@
 package challenges.java;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
@@ -14,7 +15,7 @@ import challenges.java.util.Util;
 
 public class C0189E {
 	public static void main(String[] args) throws IOException {
-		@SuppressWarnings("resource") Scanner keyboard = new Scanner(System.in).useDelimiter("\\r\\n");
+		Scanner keyboard = new Scanner(System.in);
 		List<String> words = Util.getLinesFromFile(Util.WORDLIST);
 
 		// Prompt user for a difficulty.
@@ -27,51 +28,88 @@ public class C0189E {
 				break;
 		}
 		
-		// Prompt user for a letter.
+		char[] chars = new char[word.length()];
+		Arrays.fill(chars, '_');
+		String display = new String(chars);
 		
-		// Does letter exist?
-			// Yes: Keep going.
-			// No: display hangman; increment faults.
-		
-		// Rematch?
+		// Game loop.
+			// Display hangman stuff.
+			
+			// Prompt user for a letter.
+			String letter = chooseLetter(keyboard);
+			
+			if (word.contains(letter)) {
+				int from = -1;
+				while ((from = word.indexOf(letter, from + 1)) > 0) {
+					char[] t = display.toCharArray();
+					t[from] = letter.charAt(0);
+					display = String.valueOf(t);
+				}
+			}
+			
+			// Does letter exist?
+				// Yes: keep going.
+				// No: increment faults.
+			
+			// Is gameover?
+			
+		System.out.println(word + ", " + display);
 	}
 	
-	public static Difficulty chooseDifficulty(Scanner keyboard) {
-		// Get the list of user commands.
-		Difficulty[] commands = Difficulty.values();
+	private  static Difficulty chooseDifficulty(Scanner keyboard) {
+		Difficulty difficulty = null;
+		boolean valid = false;
 		
-		while (true) {
-			displayDifficulties(commands);
+		do {
+			displayDifficulties();
 			
 			try {
-				// Get the user's choice.
-				int choice = keyboard.nextInt();
-				
-				// Perform user action.
-				return commands[choice];
+				difficulty = Difficulty.values()[keyboard.nextInt()];
+				valid = true;
 			} catch (InputMismatchException e) {
 				keyboard.next();
 				
 				System.out.println("Invalid Input, please enter an Integer.");
 			} catch (ArrayIndexOutOfBoundsException e) {
-				System.out.println("Please enter an integer between 0 and " + (commands.length - 1) + ".");
-			} System.out.println();
-		}
+				System.out.println("Please enter an integer between 0 and " + (Difficulty.values().length - 1) + ".");
+			} finally {
+				keyboard.nextLine();
+				System.out.println();
+			}
+		} while (!valid);
+		
+		return difficulty;
 	}
 	
-	private static void displayDifficulties(Difficulty[] commands) {
+	private static String chooseLetter(Scanner keyboard) {
+		String letter;
+		boolean valid = false;
+		
+		do {
+			System.out.print("Choose a word: ");
+			letter = keyboard.nextLine();
+			
+			if (letter.matches("[A-Za-z]"))
+				valid = true;
+			
+			System.out.printf("%s\n\n", valid ? letter + " is a valid letter." : letter + " is not a valid letter, try again.");
+		} while (!valid);
+		
+		return letter;
+	}
+	
+	private static void displayDifficulties() {
 		System.out.println("Choose from the list of difficulties:");
-		for (Difficulty sc : commands)
+		for (Difficulty sc : Difficulty.values())
 			System.out.printf("\t%d: %s\n", sc.ordinal(), sc.name());
 		System.out.print("Input a command: ");
 	}
 }
 
 enum Difficulty {
-	EASY(5, 7), 
+	EASY(3, 7), 
 	MEDIUM(7, 9), 
-	HARD(9), 
-	NONE(0);
+	HARD(9);
 	
 	int start, end;
 	Difficulty(int start) {
