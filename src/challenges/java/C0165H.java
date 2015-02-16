@@ -17,108 +17,114 @@ import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.JFrame;
 
 public class C0165H extends Canvas {
 	class Forest {
-		public final double P_BEARS = .02;
-		public final double P_LUMBERJACKS = .1;
-		public final double P_TREES = .5;
-		
 		public int width, height, months;
+		
 		public List<Entity> entities;
-		public Entity[] tiles;
+		public Tile[] tiles;
+
+		public final int P_BEARS = 20;
+		public final int P_LUMBERJACKS = 1;
+		public final int P_TREES = 5;
+		public int n_bears, n_lumberjacks, n_trees;
+		
 		public Forest(int width, int height) {
 			this.width = width;
 			this.height = height;
 			this.months = 1;
-			this.tiles = new Entity[width * height];
 			
-			for (int y = 0; y < height; ++y) {
-				for (int x = 0; x < width; ++x) {
-					this.tiles[x + y * width] = new Grass(x, y);
-				}
-			}
+			this.entities = new CopyOnWriteArrayList<Entity>();
+			this.tiles = new Tile[width * height];
+			
+			this.n_bears = tiles.length * P_BEARS / 100;
+			this.n_lumberjacks = tiles.length * P_LUMBERJACKS / 100;
+			this.n_trees = tiles.length * P_TREES / 100;
 			
 			init();
 		}
 		
 		public void init() {
+			/* Place tiles. */
 			for (int y = 0; y < height; ++y) {
 				for (int x = 0; x < width; ++x) {
-					this.tiles[x + y * width] = new Grass(x, y);
+					this.tiles[x + y * width] = Tile.GRASS;
+				}
+			}
+	
+			/* Place entities. */
+			for (int i = 0; i < n_bears; ++i) {
+				int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
+				if (tiles[x + y * width].walkable) {
+					entities.add(new Bear(x, y));
+					//tiles[coordinate] = new Bear(x, y);
 				}
 			}
 			
-			int n_bears = (int) (tiles.length * P_BEARS);
-			while (n_bears > 0) {
-				int coordinate;
+			for (int i = 0; i < n_lumberjacks; ++i) {
 				int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
-				if (tiles[coordinate = x + y * width] instanceof Grass) {
-					tiles[coordinate] = new Bear(x, y);
-					--n_bears;
+				if (tiles[x + y * width].walkable) {
+					entities.add(new Lumberjack(x, y));
+					//tiles[coordinate] = new Lumberjack(x, y);
 				}
 			}
 			
-			int n_lumberjacks = (int) (tiles.length * P_LUMBERJACKS);
-			while (n_lumberjacks > 0) {
-				int coordinate;
+			for (int i = 0; i < n_trees; ++i) {
 				int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
-				if (tiles[coordinate = x + y * width] instanceof Grass) {
-					tiles[coordinate] = new Lumberjack(x, y);
-					--n_lumberjacks;
-				}
-			}
-			
-			int n_trees = (int) (tiles.length * P_TREES);
-			while (n_trees > 0) {
-				int coordinate;
-				int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
-				if (tiles[coordinate = x + y * width] instanceof Grass) {
+				if (tiles[x + y * width].walkable) {
 					int r = (int) (Math.random() * tiles.length) % 4;
 					TreeType type = (r == 0 ? TreeType.SAPLING : (r == 1 ? TreeType.ELDER : TreeType.TREE));
-					
-					tiles[coordinate] = new Tree(type, x, y);
-					--n_trees;
+
+					entities.add(new Tree(type, x, y));
+					//tiles[coordinate] = new Tree(type, x, y);
 				}
 			}
-		}
-		
-		public void place(Entity e, int x, int y) {
-			tiles[x + y * width] = e;
-			//System.out.println("place pos: " + x + ", " + y + ", " + (x + y * width));
-		}
-		
-		public void swap(int x1, int y1, int x2, int y2) {
-			Entity t1 = tiles[x1 + y1 * width], t2 = tiles[x2 + y2 * width];
-			
-			t1.x = x2;
-			t1.y = y2;
-			
-			t2.x = x1;
-			t2.y = y1;
-			
-			tiles[x1 + y1 * width] = t2;
-			tiles[x2 + y2 * width] = t1;
 		}
 		
 		public void update() {
-			int l = 0, g = 0;
-			for (Entity e : tiles) {
-				if (e instanceof Lumberjack) ++l;
-				if (e instanceof Grass) ++g;
+			for (Entity e : entities) {
 				e.update(this);
 			}
-			System.out.println("Lumberjacks: " + l + ".");
-			System.out.println("Grass: " + g + ".");
+
+			System.out.println("Bears: " + n_bears + ".");
+			System.out.println("Lumberjacks: " + n_lumberjacks + ".");
+			System.out.println("Trees: " + n_trees + ".");
+			System.out.println();
+			
 			++months;
 		}
 		
 		public void render(Screen screen) {
-			for (Entity e : tiles) {
+			/* Render tile map. */
+			for (int y = 0; y < height; ++y) {
+				for (int x = 0; x < width; ++x) {
+					tiles[x + y * width].render(screen, x, y);
+				}
+			}
+			
+			/* Render entities. */
+			for (Entity e : entities) {
 				e.render(screen);
 			}
+		}
+	}
+	
+	enum Tile {
+		GRASS(0x00FF00, true);
+		
+		int color;
+		boolean walkable;
+		Tile(int color, boolean walkable) {
+			this.color = color;
+			this.walkable = walkable;
+		}
+		
+		public void render(Screen screen, int x, int y) {
+			screen.render(x, y, color);
 		}
 	}
 	
@@ -144,12 +150,6 @@ public class C0165H extends Canvas {
 		}
 	}
 	
-	class Grass extends Entity {
-		public Grass(int x, int y) {
-			super(0x00FF00, x, y);
-		}
-	}
-	
 	class Lumberjack extends Entity {
 		public int lumber;
 		public Lumberjack(int x, int y) {
@@ -170,7 +170,7 @@ public class C0165H extends Canvas {
 					if (nx < 0 || nx >= forest.width || ny < 0 || ny >= forest.height)
 						continue;
 					
-					if (forest.tiles[nx + ny * forest.width] instanceof Grass) {
+					if (forest.tiles[nx + ny * forest.width] == Tile.GRASS) {
 						points.add(new Point(nx, ny));
 					}
 				}
@@ -183,11 +183,8 @@ public class C0165H extends Canvas {
 			/* Otherwise, choose a random point. */
 			Point point = points.get((int) (Math.random() * points.size()));
 			
-			/* TODO The placing / swapping is not working, lumberjacks get multiplied. */
-			/* Move the lumberjack to the new spot and replace the old spot. */
-			//forest.place(new Grass(x, y), x, y);
-			//forest.place(this, point.x, point.y);
-			forest.swap(x, y, point.x, point.y);
+			this.x = point.x;
+			this.y = point.y;
 			
 			return true;
 		}
@@ -202,30 +199,24 @@ public class C0165H extends Canvas {
 					if (nx < 0 || nx >= forest.width || ny < 0 || ny >= forest.height)
 						continue;
 					
-					Entity e;
-					// If the entity is a Tree type.
-					if ((e = forest.tiles[nx + ny * forest.width]) instanceof Tree) {
-						switch (((Tree) e).type) {
-						case TREE:
-							forest.place(new Grass(nx, ny), nx, ny);
-							/*forest.place(new Grass(x, y), x, y);
-							forest.place(this, nx, ny);
-							this.x = nx;
-							this.y = ny;*/
-							lumber += 1;
-							return true;
-							
-						case ELDER:
-							forest.place(new Grass(nx, ny), nx, ny);
-							/*forest.place(new Grass(x, y), x, y);
-							forest.place(this, nx, ny);
-							this.x = nx;
-							this.y = ny;*/
-							lumber += 2;
-							return true;
-							
-						default:
-							break;
+					for (Entity e : forest.entities) {
+						if (e instanceof Tree && (e.x == nx && e.y == ny)) {
+							switch (((Tree) e).type) {
+							case TREE:
+								forest.entities.remove(e);
+								--forest.n_trees;
+								lumber += 1;
+								return true;
+								
+							case ELDER:
+								forest.entities.remove(e);
+								--forest.n_trees;
+								lumber += 2;
+								return true;
+								
+							default:
+								break;
+							}
 						}
 					}
 				}
@@ -306,7 +297,7 @@ public class C0165H extends Canvas {
 	public static final int HEIGHT = WIDTH / 16 * 9;
 	public static final int SCALE  = 8;
 	
-	private final int TICKS_PER_SECOND = 1;
+	private final int TICKS_PER_SECOND = 15;
 	private final int SKIP_TICKS = 1000 / TICKS_PER_SECOND;
 	private final int MAX_FRAMESKIP = 5;
 	
