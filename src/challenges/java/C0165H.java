@@ -105,21 +105,26 @@ public class C0165H extends Canvas {
 				   .filter(e -> e instanceof Lumberjack)
 				   .map(e -> (Lumberjack) e).collect(Collectors.toList());
 			
-			/* If lumber is equal to or greater than number or lumberjacks, create a lumberjack. */
+			/* If lumber is equal to or greater than number or lumberjacks, create lumberjacks. */
 			if (lumber >= n_lumberjacks) {
 				if (C0165H.DEBUG) {
 					System.out.println("Creating a lumberjack.\n");
 				}
-				
-				boolean placed = false;
-				while (!placed) {
-					int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
-					if (tiles[x + y * width].walkable) {
-						entities.add(new Lumberjack(x, y));
-						placed = true;
-						++n_lumberjacks;
+
+				/* Create (lumber / 10) number of lumberjacks. */
+				int new_lumberjacks = lumber / 10;
+				while (--new_lumberjacks >= 0) {
+					boolean placed = false;
+					while (!placed) {
+						int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
+						if (tiles[x + y * width].walkable) {
+							entities.add(new Lumberjack(x, y));
+							placed = true;
+							++n_lumberjacks;
+						}
 					}
 				}
+				
 			/* Otherwise, remove a lumberjack. */
 			} else {
 				if (C0165H.DEBUG) {
@@ -545,7 +550,7 @@ public class C0165H extends Canvas {
 	public static final int HEIGHT = WIDTH / 16 * 9;
 	public static final int SCALE  = 8;
 	
-	private final int TICKS_PER_SECOND = 5;
+	private final int TICKS_PER_SECOND = 30;
 	private final int SKIP_TICKS = 1000 / TICKS_PER_SECOND;
 	private final int MAX_FRAMESKIP = 5;
 	
