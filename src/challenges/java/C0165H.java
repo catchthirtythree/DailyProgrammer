@@ -694,15 +694,16 @@ public class C0165H extends Canvas {
 		Graphics g = bs.getDrawGraphics();
 		g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
 		
-		/* Draw entity numbers in the top right. */
+		/* Draw entity / resource numbers in the top right. */
 		if (!DEBUG) {
 			g.setColor(Color.BLACK);
-			g.fillRect(4, 4, 130, 14);
+			g.fillRect(4, 4, 185, 27);
 			g.setColor(Color.GREEN);
-			g.fillRect(3, 3, 129, 13);
+			g.fillRect(3, 3, 184, 26);
 			g.setColor(Color.BLACK);
 			g.setFont(new Font("Ubuntu", 0, 12));
-			g.drawString("B: " + forest.n_bears + ", L: " + forest.n_lumberjacks + ", T: " + forest.n_trees, 4, 13);
+			g.drawString("Entities  - B: " + forest.n_bears + ", L: " + forest.n_lumberjacks + ", T: " + forest.n_trees, 4, 13);
+			g.drawString("Resources - L: " + forest.lumber + ", M: " + forest.maws, 4, 26);
 		}
 		
 		g.dispose();
