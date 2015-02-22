@@ -8,7 +8,9 @@ package challenges.java;
 import static javax.swing.JFrame.EXIT_ON_CLOSE;
 
 import java.awt.Canvas;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.image.BufferStrategy;
@@ -16,20 +18,24 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import javax.swing.JFrame;
 
 public class C0165H extends Canvas {
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 	
 	class Forest {
+		private static final int BEAR_MOVES = 1;
+		private static final int LUMBERJACK_MOVES = 1;
+		
 		public int width, height;
 		public int months = 1;
 		
-		public List<Entity> entities;
+		public Map<Point, List<Entity>> entities;
 		public Tile[] tiles;
 
 		public final int P_BEARS = 2;
@@ -43,7 +49,7 @@ public class C0165H extends Canvas {
 			this.width = width;
 			this.height = height;
 			
-			this.entities = new CopyOnWriteArrayList<Entity>();
+			this.entities = new ConcurrentHashMap<Point, List<Entity>>();
 			this.tiles = new Tile[width * height];
 			
 			this.n_bears = (tiles.length * P_BEARS) / 100;
@@ -53,7 +59,33 @@ public class C0165H extends Canvas {
 			init();
 		}
 		
-		public void init() {
+		public void addEntity(Entity e, int x, int y) {
+			Point point = new Point(x, y);
+			
+			/* Change the entity's position. */
+			e.x = x;
+			e.y = y;
+			
+			List<Entity> list;
+			if ((list = entities.get(point)) == null) {
+				list = new CopyOnWriteArrayList<Entity>();
+			} list.add(e);
+			
+			entities.put(point, list);
+		}
+		
+		public void removeEntity(Entity e, int x, int y) {
+			Point point = new Point(x, y);
+			
+			List<Entity> list;
+			if ((list = entities.get(point)) == null) {
+				list = new CopyOnWriteArrayList<Entity>();
+			} list.remove(e);
+			
+			entities.put(point, list);
+		}
+		
+		private void init() {
 			/* Place tiles. */
 			for (int y = 0; y < height; ++y) {
 				for (int x = 0; x < width; ++x) {
@@ -66,9 +98,12 @@ public class C0165H extends Canvas {
 				boolean placed = false;
 				while (!placed) {
 					int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
+					
 					if (tiles[x + y * width].walkable) {
-						entities.add(new Bear(x, y));
-						placed = true;
+						if (entities.get(new Point(x, y)) == null) {
+							addEntity(new Bear(x, y), x, y);
+							placed = true;
+						}
 					}
 				}
 			}
@@ -77,9 +112,12 @@ public class C0165H extends Canvas {
 				boolean placed = false;
 				while (!placed) {
 					int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
+					
 					if (tiles[x + y * width].walkable) {
-						entities.add(new Lumberjack(x, y));
-						placed = true;
+						if (entities.get(new Point(x, y)) == null) {
+							addEntity(new Lumberjack(x, y), x, y);
+							placed = true;
+						}
 					}
 				}
 			}
@@ -88,22 +126,30 @@ public class C0165H extends Canvas {
 				boolean placed = false;
 				while (!placed) {
 					int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
+					
 					if (tiles[x + y * width].walkable) {
 						int r = (int) (Math.random() * tiles.length) % 4;
 						TreeType type = (r == 0 ? TreeType.SAPLING : (r == 1 ? TreeType.ELDER : TreeType.TREE));
 
-						entities.add(new Tree(type, x, y));
-						placed = true;
+						if (entities.get(new Point(x, y)) == null) {
+							addEntity(new Tree(type, x, y), x, y);
+							placed = true;
+						}
 					}
 				}
 			}
 		}
 		
-		public void harvest() {
+		private void harvest() {
 			/* Get all instances of lumberjacks in list of entities. */
-			List<Lumberjack> lumberjacks = entities.stream()
-				   .filter(e -> e instanceof Lumberjack)
-				   .map(e -> (Lumberjack) e).collect(Collectors.toList());
+			List<Lumberjack> lumberjacks = new ArrayList<Lumberjack>();
+			for (List<Entity> ents : entities.values()) {
+				List<Lumberjack> t = ents.stream()
+					   .filter(e -> e instanceof Lumberjack)
+					   .map(e -> (Lumberjack) e).collect(Collectors.toList());
+				
+				lumberjacks.addAll(t);
+			}
 			
 			/* If lumber is equal to or greater than number or lumberjacks, create lumberjacks. */
 			if (lumber >= n_lumberjacks) {
@@ -117,10 +163,14 @@ public class C0165H extends Canvas {
 					boolean placed = false;
 					while (!placed) {
 						int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
-						if (tiles[x + y * width].walkable) {
-							entities.add(new Lumberjack(x, y));
-							placed = true;
-							++n_lumberjacks;
+						
+						List<Entity> list = forest.entities.get(new Point(x, y));
+						if (list == null || list.size() == 0) {
+							if (tiles[x + y * width].walkable) {
+								addEntity(new Lumberjack(x, y), x, y);
+								placed = true;
+								++n_lumberjacks;
+							}
 						}
 					}
 				}
@@ -131,19 +181,25 @@ public class C0165H extends Canvas {
 					System.out.println("Removing a lumberjack.\n");
 				}
 				
-				entities.remove(lumberjacks.get((int) (Math.random() * lumberjacks.size())));
+				Lumberjack lumberjack = lumberjacks.get((int) (Math.random() * lumberjacks.size()));
+				removeEntity(lumberjack, lumberjack.x, lumberjack.y);
 				--n_lumberjacks;
 			}
 		}
 		
-		public void mawing() {
-			/* Get all instances of bears in list of entities. */
-			List<Bear> bears = entities.stream()
-				   .filter(e -> e instanceof Bear)
-				   .map(e -> (Bear) e).collect(Collectors.toList());
+		private void mawing() {
+			/* Get all instances of lumberjacks in list of entities. */
+			List<Bear> bears = new ArrayList<Bear>();
+			for (List<Entity> ents : entities.values()) {
+				List<Bear> t = ents.stream()
+					   .filter(e -> e instanceof Bear)
+					   .map(e -> (Bear) e).collect(Collectors.toList());
+				
+				bears.addAll(t);
+			}
 			
 			/* If there are no maws, create a bear. */
-			if (lumber == 0) {
+			if (maws == 0) {
 				if (C0165H.DEBUG) {
 					System.out.println("Creating a bear.\n");
 				}
@@ -151,10 +207,14 @@ public class C0165H extends Canvas {
 				boolean placed = false;
 				while (!placed) {
 					int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
-					if (tiles[x + y * width].walkable) {
-						entities.add(new Bear(x, y));
-						placed = true;
-						++n_bears;
+					
+					List<Entity> list = forest.entities.get(new Point(x, y));
+					if (list == null || list.size() == 0) {
+						if (tiles[x + y * width].walkable) {
+							addEntity(new Bear(x, y), x, y);
+							placed = true;
+							++n_bears;
+						}
 					}
 				}
 			/* Otherwise, remove a bear. */
@@ -163,7 +223,8 @@ public class C0165H extends Canvas {
 					System.out.println("Removing a bear.\n");
 				}
 				
-				entities.remove(bears.get((int) (Math.random() * bears.size())));
+				Bear bear = bears.get((int) (Math.random() * bears.size()));
+				removeEntity(bear, bear.x, bear.y);
 				--n_bears;
 			}
 		}
@@ -183,14 +244,16 @@ public class C0165H extends Canvas {
 				harvest();
 				mawing();
 				
-				/* Reset lumber harvested and maw accidents. */
+				/* Reset lumber harvested and maw accidents. */ 
 				lumber = 0;
 				maws = 0;
 			}
 			
 			/* Update all entities. */
-			for (Entity e : entities) {
-				e.update(this);
+			for (List<Entity> list : entities.values()) {
+				for (Entity e : list) {
+					e.update(this);
+				}
 			}
 			
 			++months;
@@ -205,8 +268,10 @@ public class C0165H extends Canvas {
 			}
 			
 			/* Render entities. */
-			for (Entity e : entities) {
-				e.render(screen);
+			for (List<Entity> list : entities.values()) {
+				for (Entity e : list) {
+					e.render(screen);
+				}
 			}
 		}
 	}
@@ -245,7 +310,22 @@ public class C0165H extends Canvas {
 			super(0x502000, x, y);
 		}
 		
-		public boolean move(Forest forest) {
+		private boolean maw(Lumberjack lumberjack) {
+			/* Remove the lumberjack from entities and from the counter. */
+			forest.removeEntity(lumberjack, lumberjack.x, lumberjack.y);
+			--forest.n_lumberjacks;
+			++forest.maws;
+			
+			/* Move bear to lumberjack coordinates. */
+			forest.removeEntity(this, x, y);
+			/*this.x = lumberjack.x;
+			this.y = lumberjack.y;*/
+			forest.addEntity(this, x, y);
+			
+			return true;
+		}
+		
+		private boolean move(Forest forest) {
 			List<Point> points = new ArrayList<Point>();
 			
 			/* Add points around the lumberjack as possible locations (must be walkable [Grass]). */
@@ -258,35 +338,34 @@ public class C0165H extends Canvas {
 					if (nx < 0 || nx >= forest.width || ny < 0 || ny >= forest.height)
 						continue;
 					
-					boolean found = true;
-					for (Entity e : forest.entities) {
-						if (e instanceof Lumberjack && e.x == nx && e.y == ny) {
-							found = false;
-							break;
+					//List<Entity> list = forest.entities.get(new Point(nx, ny));
+					//if (list == null || list.size() == 0) {
+						if (forest.tiles[nx + ny * forest.width].walkable) {
+							points.add(new Point(nx, ny));
 						}
-					}
-					
-					if (found && forest.tiles[nx + ny * forest.width].walkable) {
-						points.add(new Point(nx, ny));
-					}
+					//}
 				}
 			}
 			
-			/* If there are no points available, the lumberjack cannot move. */
+			/* If there are no lumberjacks available, the bear cannot maw. */
 			if (points.size() == 0)
 				return false;
 			
 			/* Otherwise, choose a random point. */
 			Point point = points.get((int) (Math.random() * points.size()));
 			
-			this.x = point.x;
-			this.y = point.y;
+			forest.removeEntity(this, x, y);
+			/*this.x = point.x;
+			this.y = point.y;*/
+			forest.addEntity(this, point.x, point.y);
 			
 			return true;
 		}
-		
-		public boolean scan(Forest forest) {
-			/* Scan for possible trees to cut around the lumberjack. */
+
+		private boolean scan(Forest forest) {
+			List<Lumberjack> lumberjacks = new ArrayList<Lumberjack>();
+			
+			/* Scan for possible lumberjacks to maw around the bear. */
 			for (int yd = -1; yd <= 1; ++yd) {
 				for (int xd = -1; xd <= 1; ++xd) {
 					if (xd == 0 && yd == 0)
@@ -296,21 +375,26 @@ public class C0165H extends Canvas {
 					if (nx < 0 || nx >= forest.width || ny < 0 || ny >= forest.height)
 						continue;
 					
-					for (Entity e : forest.entities) {
-						if (e instanceof Lumberjack && (e.x == nx && e.y == ny)) {
-							forest.entities.remove(e);
-							--forest.n_lumberjacks;
-							++forest.maws;
+					List<Entity> list = forest.entities.get(new Point(nx, ny));
+					if (list != null && list.size() > 0) {
+						for (Entity e : list) {
+							if (e instanceof Lumberjack) {
+								lumberjacks.add((Lumberjack) e);
+							}
 						}
 					}
 				}
 			}
+			
+			/* If there are no lumberjacks available, leave. */
+			if (lumberjacks.size() == 0)
+				return false;
 				
-			return false;
+			return maw(lumberjacks.get((int) (Math.random() * lumberjacks.size())));
 		}
 				
 		public void update(Forest forest) {
-			int moves = 1;
+			int moves = Forest.BEAR_MOVES;
 			while (moves > 0) {
 				/* If a lumberjack can be found, break out of the loop. */
 				if (scan(forest)) break;
@@ -325,25 +409,27 @@ public class C0165H extends Canvas {
 			super(0xFF0000, x, y);
 		}
 		
-		public boolean chop(Tree tree) {
+		private boolean chop(Tree tree) {
 			if (tree.type == TreeType.SAPLING)
 				return false;
 			
 			/* Remove the tree from entities and from the counter. */
-			forest.entities.remove(tree);
+			forest.removeEntity(tree, tree.x, tree.y);
 			--forest.n_trees;
 			
 			/* 1 lumber for trees, 2 lumber for elders. */
 			forest.lumber += tree.type == TreeType.TREE ? 1 : 2;
 			
 			/* Move lumberjack to tree's coordinates. */
-			x = tree.x;
-			y = tree.y;
+			forest.removeEntity(this, x, y);
+			/*this.x = tree.x;
+			this.y = tree.y;*/
+			forest.addEntity(this, x, y);
 			
 			return true;
 		}
 		
-		public boolean move(Forest forest) {
+		private boolean move(Forest forest) {
 			List<Point> points = new ArrayList<Point>();
 			
 			/* Add points around the lumberjack as possible locations (must be walkable [Grass]). */
@@ -356,29 +442,31 @@ public class C0165H extends Canvas {
 					if (nx < 0 || nx >= forest.width || ny < 0 || ny >= forest.height)
 						continue;
 					
-					for (Entity e : forest.entities) {
-						if (e.x == nx && e.y == ny && forest.tiles[nx + ny * forest.width].walkable) {
+					List<Entity> list = forest.entities.get(new Point(nx, ny));
+					if (list == null || list.size() == 0) {
+						if (forest.tiles[nx + ny * forest.width].walkable) {
 							points.add(new Point(nx, ny));
-							break;
 						}
 					}
 				}
 			}
 			
-			/* If there are no points available, the lumberjack cannot move. */
+			/* If there are no lumberjacks available, the bear cannot maw. */
 			if (points.size() == 0)
 				return false;
 			
 			/* Otherwise, choose a random point. */
 			Point point = points.get((int) (Math.random() * points.size()));
 			
-			this.x = point.x;
-			this.y = point.y;
+			forest.removeEntity(this, x, y);
+			/*this.x = point.x;
+			this.y = point.y;*/
+			forest.addEntity(this, point.x, point.y);
 			
 			return true;
 		}
 		
-		public boolean scan(Forest forest) {
+		private boolean scan(Forest forest) {
 			List<Tree> trees = new ArrayList<Tree>();
 			
 			/* Scan for possible trees to cut around the lumberjack. */
@@ -391,16 +479,21 @@ public class C0165H extends Canvas {
 					if (nx < 0 || nx >= forest.width || ny < 0 || ny >= forest.height)
 						continue;
 					
-					for (Entity e : forest.entities) {
-						if (e instanceof Tree && e.x == nx && e.y == ny && forest.tiles[nx + ny * forest.width].walkable) {
-							trees.add((Tree) e);
-							break;
+					List<Entity> list = forest.entities.get(new Point(nx, ny));
+					if (list != null && list.size() > 0) {
+						for (Entity e : list) {
+							if (e instanceof Tree && forest.tiles[nx + ny * forest.width].walkable) {
+								trees.add((Tree) e);
+							}
 						}
 					}
 				}
 			}
+
+			/* Remove all saplings. */
+			trees = trees.stream().filter(t -> t.type != TreeType.SAPLING).collect(Collectors.toList());
 			
-			/* If there are no points available, the lumberjack cannot move. */
+			/* If there are no trees available, the lumberjack cannot chop. */
 			if (trees.size() == 0)
 				return false;
 			
@@ -409,7 +502,7 @@ public class C0165H extends Canvas {
 		}
 		
 		public void update(Forest forest) {
-			int moves = 1;
+			int moves = Forest.LUMBERJACK_MOVES;
 			while (moves > 0) {
 				/* If a tree can be found, break out of the loop. */
 				if (scan(forest)) break;
@@ -427,7 +520,12 @@ public class C0165H extends Canvas {
 			this.type = type;
 		}
 		
-		public void plant(Forest forest) {
+		private void change(TreeType type) {
+			this.type = type;
+			this.color = type.color;
+		}
+
+		private void plant(Forest forest) {
 			/* If tree is a sapling, cannot plant. */
 			if (type == TreeType.SAPLING)
 				return;
@@ -445,15 +543,11 @@ public class C0165H extends Canvas {
 						continue;
 					
 					boolean found = true;
-					for (Entity e : forest.entities) {
-						if (e.x == nx && e.y == ny) {
-							found = false;
-							break;
+					List<Entity> list = forest.entities.get(new Point(nx, ny));
+					if (list == null || list.size() == 0) {
+						if (found && forest.tiles[nx + ny * forest.width].walkable) {
+							points.add(new Point(nx, ny));
 						}
-					}
-					
-					if (found && forest.tiles[nx + ny * forest.width].walkable) {
-						points.add(new Point(nx, ny));
 					}
 				}
 			}
@@ -469,15 +563,10 @@ public class C0165H extends Canvas {
 				/* Choose a random point to plant the sapling. */
 				Point point = points.get((int) (Math.random() * points.size()));
 				
-				forest.entities.add(new Tree(TreeType.SAPLING, point.x, point.y));
+				forest.addEntity(new Tree(TreeType.SAPLING, point.x, point.y), point.x, point.y);
 				
 				++forest.n_trees;
 			}
-		}
-		
-		private void setType(TreeType type) {
-			this.type = type;
-			this.color = type.color;
 		}
 		
 		public void update(Forest forest) {
@@ -489,16 +578,16 @@ public class C0165H extends Canvas {
 			++months;
 		}
 		
-		public void upgrade() {
+		private void upgrade() {
 			switch (type) {
 			case SAPLING:
 				if (months == 12)
-					setType(TreeType.TREE);
+					change(TreeType.TREE);
 				break;
 				
 			case TREE:
 				if (months == 120)
-					setType(TreeType.ELDER);
+					change(TreeType.ELDER);
 				break;
 				
 			case ELDER:
@@ -531,12 +620,6 @@ public class C0165H extends Canvas {
 			}
 		}
 		
-		public void random() {
-			for (int j = 0; j < pixels.length; j++) {
-				pixels[j] = new Random().nextInt(0xFFFFFF);
-			}
-		}
-		
 		public void render(int x, int y, int pixel) {
 			pixels[x + y * width] = pixel;
 		}
@@ -550,7 +633,7 @@ public class C0165H extends Canvas {
 	public static final int HEIGHT = WIDTH / 16 * 9;
 	public static final int SCALE  = 8;
 	
-	private final int TICKS_PER_SECOND = 30;
+	private final int TICKS_PER_SECOND = 5;
 	private final int SKIP_TICKS = 1000 / TICKS_PER_SECOND;
 	private final int MAX_FRAMESKIP = 5;
 	
@@ -610,6 +693,17 @@ public class C0165H extends Canvas {
 		
 		Graphics g = bs.getDrawGraphics();
 		g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
+		
+		/* Draw entity numbers in the top right. */
+		if (!DEBUG) {
+			g.setColor(Color.BLACK);
+			g.fillRect(4, 4, 130, 14);
+			g.setColor(Color.GREEN);
+			g.fillRect(3, 3, 129, 13);
+			g.setColor(Color.BLACK);
+			g.setFont(new Font("Ubuntu", 0, 12));
+			g.drawString("B: " + forest.n_bears + ", L: " + forest.n_lumberjacks + ", T: " + forest.n_trees, 4, 13);
+		}
 		
 		g.dispose();
 		bs.show();
