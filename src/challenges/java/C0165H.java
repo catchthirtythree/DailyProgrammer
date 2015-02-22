@@ -86,7 +86,7 @@ public class C0165H extends Canvas {
 		}
 
 		private void init() {
-			/* Place tiles. */
+			/* Place tiles. (Write a map / terrain generator?) */
 			for (int y = 0; y < height; ++y) {
 				for (int x = 0; x < width; ++x) {
 					this.tiles[x + y * width] = Tile.GRASS;
@@ -174,8 +174,7 @@ public class C0165H extends Canvas {
 						}
 					}
 				}
-
-				/* Otherwise, remove a lumberjack. */
+			/* Otherwise, remove a lumberjack. */
 			} else {
 				if (C0165H.DEBUG) {
 					System.out.println("Removing a lumberjack.\n");
@@ -188,7 +187,7 @@ public class C0165H extends Canvas {
 		}
 
 		private void mawing() {
-			/* Get all instances of lumberjacks in list of entities. */
+			/* Get all instances of bears in list of entities. */
 			List<Bear> bears = new ArrayList<Bear>();
 			for (List<Entity> ents : entities.values()) {
 				List<Bear> t = ents.stream()
@@ -339,7 +338,7 @@ public class C0165H extends Canvas {
 				}
 			}
 
-			/* If there are no lumberjacks available, the bear cannot maw. */
+			/* If there are no points available, the bear cannot move. */
 			if (points.size() == 0) return false;
 
 			/* Otherwise, choose a random point. */
@@ -385,10 +384,10 @@ public class C0165H extends Canvas {
 				/* If a lumberjack can be found, break out of the loop. */
 				if (scan(forest)) break;
 				/* If no tiles are open break out of the loop, otherwise loop. */
-				if (!move(forest)) 
-					break;
-				else
+				if (move(forest)) 
 					--moves;
+				else
+					break;
 			}
 		}
 	}
@@ -435,7 +434,7 @@ public class C0165H extends Canvas {
 				}
 			}
 
-			/* If there are no lumberjacks available, the bear cannot maw. */
+			/* If there are no points available, the lumberjack cannot move. */
 			if (points.size() == 0) return false;
 
 			/* Otherwise, choose a random point. */
@@ -485,10 +484,10 @@ public class C0165H extends Canvas {
 				/* If a tree can be found, break out of the loop. */
 				if (scan(forest)) break;
 				/* If no tiles are open break out of the loop, otherwise loop. */
-				if (!move(forest)) 
-					break;
-				else
+				if (move(forest)) 
 					--moves;
+				else
+					break;
 			}
 		}
 	}
