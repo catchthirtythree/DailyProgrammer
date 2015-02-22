@@ -17,6 +17,7 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,8 +36,8 @@ public class C0165H extends Canvas {
 		public int width, height;
 		public int months = 1;
 
-		public Map<Point, List<Entity>> entities;
 		public Tile[] tiles;
+		public Map<Point, List<Entity>> entities;
 
 		public final int P_BEARS = 2;
 		public final int P_LUMBERJACKS = 10;
@@ -49,8 +50,8 @@ public class C0165H extends Canvas {
 			this.width = width;
 			this.height = height;
 
-			this.entities = new ConcurrentHashMap<Point, List<Entity>>();
 			this.tiles = new Tile[width * height];
+			this.entities = new ConcurrentHashMap<Point, List<Entity>>();
 
 			this.n_bears = (tiles.length * P_BEARS) / 100;
 			this.n_lumberjacks = (tiles.length * P_LUMBERJACKS) / 100;
@@ -70,6 +71,9 @@ public class C0165H extends Canvas {
 			if ((list = entities.get(point)) == null) {
 				list = new CopyOnWriteArrayList<Entity>();
 			} list.add(e);
+
+			/* Sort list so trees render before bears / lumberjacks. */
+			Collections.sort(list);
 
 			entities.put(point, list);
 		}
@@ -160,8 +164,9 @@ public class C0165H extends Canvas {
 				/* Create (lumber / 10) number of lumberjacks. */
 				int new_lumberjacks = lumber / 10;
 				while (--new_lumberjacks >= 0) {
+					int tries = 50;
 					boolean placed = false;
-					while (!placed) {
+					while (!placed && tries > 0) {
 						int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
 
 						List<Entity> list = forest.entities.get(new Point(x, y));
@@ -172,6 +177,14 @@ public class C0165H extends Canvas {
 								++n_lumberjacks;
 							}
 						}
+						
+						--tries;
+					}
+					
+					if (tries == 0) {
+						int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
+						addEntity(new Lumberjack(x, y), x, y);
+						++n_lumberjacks;
 					}
 				}
 			/* Otherwise, remove a lumberjack. */
@@ -203,8 +216,9 @@ public class C0165H extends Canvas {
 					System.out.println("Creating a bear.\n");
 				}
 
+				int tries = 50;
 				boolean placed = false;
-				while (!placed) {
+				while (!placed && tries > 0) {
 					int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
 
 					List<Entity> list = forest.entities.get(new Point(x, y));
@@ -215,8 +229,16 @@ public class C0165H extends Canvas {
 							++n_bears;
 						}
 					}
+					
+					--tries;
 				}
-				/* Otherwise, remove a bear. */
+				
+				if (tries == 0) {
+					int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
+					addEntity(new Bear(x, y), x, y);
+					++n_bears;
+				}
+			/* Otherwise, remove a bear. */
 			} else {
 				if (C0165H.DEBUG) {
 					System.out.println("Removing a bear.\n");
@@ -286,7 +308,7 @@ public class C0165H extends Canvas {
 		}
 	}
 
-	class Entity {
+	class Entity implements Comparable<Entity> {
 		public int color, x, y;
 
 		public Entity(int color, int x, int y) {
@@ -300,6 +322,10 @@ public class C0165H extends Canvas {
 
 		public void render(Screen screen) {
 			screen.render(x, y, color);
+		}
+
+		@Override public int compareTo(Entity arg0) {
+			return (this instanceof Tree ? -1 : 0);
 		}
 	}
 
@@ -494,7 +520,7 @@ public class C0165H extends Canvas {
 
 	class Tree extends Entity {
 		public TreeType type;
-		public int months = 1;
+		public int months = 0;
 
 		public Tree(TreeType type, int x, int y) {
 			super(type.color, x, y);
@@ -506,9 +532,9 @@ public class C0165H extends Canvas {
 			this.color = type.color;
 		}
 
-		private void plant(Forest forest) {
+		private boolean plant(Forest forest) {
 			/* If tree is a sapling, cannot plant. */
-			if (type == TreeType.SAPLING) return;
+			if (type == TreeType.SAPLING) return false;
 
 			List<Point> points = new ArrayList<Point>();
 
@@ -531,7 +557,7 @@ public class C0165H extends Canvas {
 			}
 
 			/* If there are no points available, the tree cannot plant a sapling. */
-			if (points.size() == 0) return;
+			if (points.size() == 0) return false;
 
 			/* Trees have a 10% chance of planting saplings, Elders have a 20% chance. */
 			int chance = type == TreeType.TREE ? 100 : 50;
@@ -544,6 +570,8 @@ public class C0165H extends Canvas {
 
 				++forest.n_trees;
 			}
+			
+			return true;
 		}
 
 		public void update(Forest forest) {
@@ -605,11 +633,17 @@ public class C0165H extends Canvas {
 	/* MAIN WINDOW */
 
 	private static final long serialVersionUID = 1L;
+	
+	/* Create opaque colours for entity / resource label. */
+	private static final Color BLACK = new Color(0, 0, 0, 128);
+	private static final Color GREEN = new Color(0, 255, 0, 188);
 
+	/* Create sizing paremeters. */
 	public static final int WIDTH = 100;
 	public static final int HEIGHT = WIDTH / 16 * 9;
 	public static final int SCALE = 8;
 
+	/* Create fps / tickrate parameters. */
 	private final int TICKS_PER_SECOND = 5;
 	private final int SKIP_TICKS = 1000 / TICKS_PER_SECOND;
 	private final int MAX_FRAMESKIP = 5;
@@ -674,14 +708,18 @@ public class C0165H extends Canvas {
 
 		/* Draw entity / resource numbers in the top right. */
 		if (!DEBUG) {
-			g.setColor(Color.BLACK);
-			g.fillRect(4, 4, 185, 27);
-			g.setColor(Color.GREEN);
-			g.fillRect(3, 3, 184, 26);
+			/* Draw box. */
+			g.setColor(BLACK);
+			g.fillRect(4, 4, 185, 40);
+			g.setColor(GREEN);
+			g.fillRect(3, 3, 184, 39);
+			
+			/* Draw text. */
 			g.setColor(Color.BLACK);
 			g.setFont(new Font("Ubuntu", 0, 12));
 			g.drawString("Entities  - B: " + forest.n_bears + ", L: " + forest.n_lumberjacks + ", T: " + forest.n_trees, 4, 13);
 			g.drawString("Resources - L: " + forest.lumber + ", M: " + forest.maws, 4, 26);
+			g.drawString("Time - Year: " + (forest.months / 12) + ", Month: " + (forest.months % 12 + 1), 4, 39);
 		}
 
 		g.dispose();
