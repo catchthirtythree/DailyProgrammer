@@ -30,8 +30,8 @@ public class C0165H extends Canvas {
 	private static final boolean DEBUG = false;
 
 	class Forest {
-		private static final int BEAR_MOVES = 1;
-		private static final int LUMBERJACK_MOVES = 1;
+		private static final int BEAR_MOVES = 5;
+		private static final int LUMBERJACK_MOVES = 3;
 
 		public int width, height;
 		public int months = 1;
@@ -155,7 +155,7 @@ public class C0165H extends Canvas {
 				lumberjacks.addAll(t);
 			}
 
-			/* If lumber is equal to or greater than number or lumberjacks, create lumberjacks. */
+			/* If lumber is equal to or greater than number of lumberjacks, create lumberjacks. */
 			if (lumber >= n_lumberjacks) {
 				if (C0165H.DEBUG) {
 					System.out.println("Creating a lumberjack.\n");
@@ -175,6 +175,15 @@ public class C0165H extends Canvas {
 								addEntity(new Lumberjack(x, y), x, y);
 								placed = true;
 								++n_lumberjacks;
+							}
+						} else {
+							int bears = list.stream().filter(e -> !(e instanceof Bear)).collect(Collectors.toList()).size();
+							if (bears == 0) {
+								if (tiles[x + y * width].walkable) {
+									addEntity(new Lumberjack(x, y), x, y);
+									placed = true;
+									++n_lumberjacks;
+								}
 							}
 						}
 						
@@ -216,37 +225,53 @@ public class C0165H extends Canvas {
 					System.out.println("Creating a bear.\n");
 				}
 
-				int tries = 50;
-				boolean placed = false;
-				while (!placed && tries > 0) {
-					int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
+				int new_bears = (int) Math.sqrt(n_lumberjacks);
+				while (--new_bears >= 0) {
+					int tries = 50;
+					boolean placed = false;
+					while (!placed && tries > 0) {
+						int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
 
-					List<Entity> list = forest.entities.get(new Point(x, y));
-					if (list == null || list.size() == 0) {
-						if (tiles[x + y * width].walkable) {
-							addEntity(new Bear(x, y), x, y);
-							placed = true;
-							++n_bears;
+						List<Entity> list = forest.entities.get(new Point(x, y));
+						if (list == null || list.size() == 0){ 
+							if (tiles[x + y * width].walkable) {
+								addEntity(new Bear(x, y), x, y);
+								placed = true;
+								++n_bears;
+							}
+						} else {
+							int lumberjacks = list.stream().filter(e -> !(e instanceof Lumberjack)).collect(Collectors.toList()).size();
+							if (lumberjacks == 0) {
+								if (tiles[x + y * width].walkable) {
+									addEntity(new Bear(x, y), x, y);
+									placed = true;
+									++n_bears;
+								}
+							}
 						}
+						
+						--tries;
 					}
 					
-					--tries;
-				}
-				
-				if (tries == 0) {
-					int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
-					addEntity(new Bear(x, y), x, y);
-					++n_bears;
+					if (tries == 0) {
+						int x = (int) (Math.random() * width), y = (int) (Math.random() * height);
+						addEntity(new Bear(x, y), x, y);
+						++n_bears;
+					}
 				}
 			/* Otherwise, remove a bear. */
 			} else {
 				if (C0165H.DEBUG) {
 					System.out.println("Removing a bear.\n");
 				}
-
-				Bear bear = bears.get((int) (Math.random() * bears.size()));
-				removeEntity(bear, bear.x, bear.y);
-				--n_bears;
+				
+				int new_bears = maws / 10;
+				while (--new_bears >= 0 && n_bears > 0) {
+					Bear bear = bears.get((int) (Math.random() * bears.size()));
+					removeEntity(bear, bear.x, bear.y);
+					bears.remove(bear);
+					--n_bears;
+				}
 			}
 		}
 
@@ -639,7 +664,7 @@ public class C0165H extends Canvas {
 	private static final Color GREEN = new Color(0, 255, 0, 188);
 
 	/* Create sizing paremeters. */
-	public static final int WIDTH = 100;
+	public static final int WIDTH = 200;
 	public static final int HEIGHT = WIDTH / 16 * 9;
 	public static final int SCALE = 8;
 
@@ -710,16 +735,16 @@ public class C0165H extends Canvas {
 		if (!DEBUG) {
 			/* Draw box. */
 			g.setColor(BLACK);
-			g.fillRect(4, 4, 185, 40);
+			g.fillRect(4, 4, 235, 40);
 			g.setColor(GREEN);
-			g.fillRect(3, 3, 184, 39);
+			g.fillRect(3, 3, 234, 39);
 			
 			/* Draw text. */
 			g.setColor(Color.BLACK);
-			g.setFont(new Font("Ubuntu", 0, 12));
-			g.drawString("Entities  - B: " + forest.n_bears + ", L: " + forest.n_lumberjacks + ", T: " + forest.n_trees, 4, 13);
-			g.drawString("Resources - L: " + forest.lumber + ", M: " + forest.maws, 4, 26);
-			g.drawString("Time - Year: " + (forest.months / 12) + ", Month: " + (forest.months % 12 + 1), 4, 39);
+			g.setFont(new Font("Ubuntu Mono", 0, 12));
+			g.drawString(String.format("Entities  - B: %d, L: %d, T: %d", forest.n_bears, forest.n_lumberjacks, forest.n_trees), 4, 13);
+			g.drawString(String.format("Resources - L: %d, M: %d", forest.lumber, forest.maws), 4, 26);
+			g.drawString(String.format("Year: %d, Months: %d", (forest.months / 12), (forest.months % 12 + 1)), 4, 39);
 		}
 
 		g.dispose();
@@ -729,7 +754,7 @@ public class C0165H extends Canvas {
 	public static void main(String[] args) {
 		C0165H game = new C0165H();
 
-		game.frame.setResizable(false);
+		game.frame.setResizable(true);
 		game.frame.setTitle(TITLE);
 		game.frame.add(game);
 		game.frame.pack();
