@@ -1,3 +1,8 @@
+/**
+ * @author Michael
+ * 
+ * http://www.reddit.com/r/dailyprogrammer/comments/2ww3pl/2015223_challenge_203_easy_the_start_of_something/
+ */
 package challenges.java;
 
 import static javax.swing.JFrame.EXIT_ON_CLOSE;
@@ -23,7 +28,7 @@ public class C0203E extends JComponent {
 	}
 	
 	public void paint(Graphics g) {
-		g.fillRect(width / 2 / 2, height / 2 / 2, width / 2, height / 2);
+		g.fillRect(width * 1 / 4, height * 1 / 4, width / 2, height / 2);
 	}
 	
 	public static void main(String[] args) {
