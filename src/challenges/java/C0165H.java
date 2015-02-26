@@ -265,7 +265,7 @@ public class C0165H extends Canvas {
 					System.out.println("Removing a bear.\n");
 				}
 				
-				int new_bears = maws / 10;
+				int new_bears = (int) (Math.round(maws / 10.0));
 				while (--new_bears >= 0 && n_bears > 0) {
 					Bear bear = bears.get((int) (Math.random() * bears.size()));
 					removeEntity(bear, bear.x, bear.y);
