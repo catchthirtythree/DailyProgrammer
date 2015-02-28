@@ -1,10 +1,9 @@
-import Tkinter
-
-'''
+"""
 @author: Michael
 
 http://www.reddit.com/r/dailyprogrammer/comments/2ww3pl/2015223_challenge_203_easy_the_start_of_something/
-'''
+"""
+import Tkinter
 
 master = Tkinter.Tk()
 

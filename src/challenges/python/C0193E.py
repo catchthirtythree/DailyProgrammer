@@ -1,10 +1,9 @@
-import sys
-
 """
 @author Michael
 
 http://www.reddit.com/r/dailyprogrammer/comments/2ptrmp/20141219_challenge_193_easy_acronym_expander/
 """
+import sys
 
 dictionary = {
     "lol": "laugh out loud",
