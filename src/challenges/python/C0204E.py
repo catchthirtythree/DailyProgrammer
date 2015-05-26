@@ -1,7 +1,7 @@
 '''
-Created on Mar 5, 2015
-
 @author: Michael
+
+http://www.reddit.com/r/dailyprogrammer/comments/2xoxum/20150302_challenge_204_easy_remembering_your_lines/
 '''
 import re, sys
 
@@ -34,8 +34,8 @@ for (act, scenes) in re_scenes:
         temp[scene] = re_dialogue.findall(dialogue.strip('\n'))
         index[act].update(temp)
 
+# Search input.
 search = ' '.join(sys.argv[1:])
-
 for (act, scenes) in index.items():
     for (scene, dialogue) in scenes.items():
         for (speaker, line) in dialogue:
