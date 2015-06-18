@@ -1,5 +1,5 @@
 /**
-w * @author Michael
+ * @author Michael
  * 
  * http://www.reddit.com/r/dailyprogrammer/comments/38fjll/20150603_challenge_217_intermediate_space_code/
  */
@@ -26,8 +26,7 @@ public class C0217I {
 		}};
 		
 		/* Define decipher functions */
-		Map<String, Function<String[], String[]>> funcs = new HashMap<String, Function<String[], String[]>>() {
-			private static final long serialVersionUID = 1L; {
+		Map<String, Function<String[], String[]>> funcs = new HashMap<String, Function<String[], String[]>>() {{
 			put("Omicron V", x -> Stream.of(x).map(c -> String.valueOf((char) (Integer.parseInt(c) ^ 16))).toArray(String[]::new));
 			put("Hoth",      x -> Stream.of(x).map(c -> String.valueOf((char) (Integer.parseInt(c) - 10))).toArray(String[]::new));
 			put("Ryza IV",   x -> Stream.of(x).map(c -> String.valueOf((char) (Integer.parseInt(c) +  1))).toArray(String[]::new));
