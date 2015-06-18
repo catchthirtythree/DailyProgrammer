@@ -9,23 +9,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-class Die {
-	private int sides;
-	private int last;
-	public Die(int sides) {
-		this.sides = sides;
-	}
-	
-	public int roll() {
-		return (last = (int) (Math.random() * sides) + 1);
-	}
-	
-	public int getLast() {
-		return last;
-	}
-}
-
 public class C0195I {
+	static class Die {
+		private int sides;
+		private int last;
+		public Die(int sides) {
+			this.sides = sides;
+		}
+		
+		public int roll() {
+			return (last = (int) (Math.random() * sides) + 1);
+		}
+		
+		public int getLast() {
+			return last;
+		}
+	}
+	
 	public static void main(String[] args) {
 		String input = "1d12 5d6";
 		

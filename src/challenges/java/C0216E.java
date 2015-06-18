@@ -6,8 +6,9 @@
 package challenges.java;
 
 import java.util.Arrays;
-import java.util.Random;
+import java.util.Collections;
 import java.util.Scanner;
+import java.util.Stack;
 
 public class C0216E {
 	enum Value {
@@ -33,45 +34,33 @@ public class C0216E {
 	}
 
 	static class Deck {
-		private static final int DECK_SIZE = 52;
-		
-		public int current = 0;
-		public Card[] cards = new Card[DECK_SIZE];
+		public Stack<Card> cards = new Stack<Card>();
 		
 		public Deck() {
 			for (Value value : Value.values())
 				for (Suit suit : Suit.values())
-					cards[current++] = new Card(value, suit);
+					cards.push(new Card(value, suit));
 		}
 		
 		public Card[] deal(int n) {
 			Card[] cards = new Card[n];
 			
 			for (int i = 0; i < n; ++i)
-				cards[i] = this.cards[--current];
+				cards[i] = draw();
 			
 			return cards;
 		}
-
-		public void shuffle() {
-			current = DECK_SIZE - 1;
-			
-			shuffle(cards);
+		
+		public Card draw() {
+			return cards.pop();
 		}
 
-		private void shuffle(Card[] cards) {
-			Random rnd = new Random();
-			
-			for (int i = cards.length - 1; i > 0; --i) {
-				int index = rnd.nextInt(i + 1);
-				Card a = cards[index];
-				cards[index] = cards[i];
-				cards[i] = a;
-			}
+		public void shuffle() {
+			Collections.shuffle(cards);
 		}
 		
 		public String toString() {
-			return Arrays.toString(cards);
+			return cards.toString();
 		}
 	}
 	
