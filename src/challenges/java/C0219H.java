@@ -29,7 +29,7 @@ public class C0219H {
 				.map(in -> Double.parseDouble(in))
 				.collect(Collectors.toList());
 		
-		/* */
+		/* Get all combinations of nuggets that are less than the capacity of the bag */
 		final List<List<Double>> combinations = new ArrayList<List<Double>>() {{
 			IntStream.range(0, nuggets.size())
 				.boxed()
@@ -38,6 +38,7 @@ public class C0219H {
 								.reduce(0.0, (x, y) -> x + y) < capacity)).forEach(fm -> add(fm));;
 		}};
 		
+		/* Display the best possible result */
 		System.out.println(combinations.stream().max((x, y) -> x.stream().reduce(0.0, (a, b) -> a + b).compareTo(y.stream().reduce(0.0, (c, d) -> c + d))).get());
 	}
 	
