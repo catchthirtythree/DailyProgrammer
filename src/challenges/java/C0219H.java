@@ -35,11 +35,18 @@ public class C0219H {
 				.boxed()
 				.flatMap(i -> combinations(nuggets, i)
 						.filter(st -> st.stream()
-								.reduce(0.0, (x, y) -> x + y) < capacity)).forEach(fm -> add(fm));;
+								.reduce(0.0, (x, y) -> x + y) < capacity))
+								.forEach(fm -> add(fm));
 		}};
 		
 		/* Display the best possible result */
-		System.out.println(combinations.stream().max((x, y) -> x.stream().reduce(0.0, (a, b) -> a + b).compareTo(y.stream().reduce(0.0, (c, d) -> c + d))).get());
+		System.out.println(
+			combinations.stream()
+				.max((x, y) -> x.stream()
+						.reduce(0.0, (a, b) -> a + b)
+						.compareTo(y.stream()
+								.reduce(0.0, (c, d) -> c + d)))
+								.get());
 	}
 	
 	/* http://stackoverflow.com/questions/28515516/enumeration-combinations-of-k-elements-using-java-8 */
