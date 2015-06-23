@@ -36,11 +36,12 @@ public class C0220E {
 		}
 		
 		/* If capitals exist, capitalize the first letter */
-		if (!sb.toString().equals(sb.toString().toLowerCase())) {
-			return capitalize(sb.toString());
+		String newWord = sb.toString();
+		if (!newWord.equals(newWord.toLowerCase())) {
+			return capitalize(newWord);
 		}
 		
-		return sb.toString();
+		return newWord;
 	}
 	
 	public static String capitalize(String word) {
