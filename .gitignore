@@ -10,3 +10,4 @@ target/
 
 # ignore eclipse directories and project files
 .settings/
+/build/
