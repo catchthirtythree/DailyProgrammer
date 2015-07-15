@@ -109,7 +109,8 @@ public class C0189E {
 enum Difficulty {
 	EASY(3, 7), 
 	MEDIUM(7, 9), 
-	HARD(9);
+	HARD(9),
+	RANDOM(1);
 	
 	int start, end;
 	Difficulty(int start) {
