@@ -22,7 +22,7 @@ public class C0217I {
 	@SuppressWarnings("serial") public static void main(String[] args) {
 		/* Define lines and retrieve from input */
 		List<String[]> lines = new ArrayList<String[]>() {{
-			Stream.of(args).forEach(line -> add(((String) line).trim().replaceAll("\\s+", " ").split(" ")));
+			Stream.of(args).forEach(line -> add(line.trim().replaceAll("\\s+", " ").split(" ")));
 		}};
 		
 		/* Define decipher functions */
@@ -48,6 +48,6 @@ public class C0217I {
 		/* Filter bad results and display */
 		results.stream()
 			.filter(p -> rate.apply(p.getValue()) == 1)
-			.forEach((p) -> System.out.printf(fmt, p.getKey(), Arrays.toString(p.getValue())));
+			.forEach(p -> System.out.printf(fmt, p.getKey(), Arrays.toString(p.getValue())));
 	}
 }
