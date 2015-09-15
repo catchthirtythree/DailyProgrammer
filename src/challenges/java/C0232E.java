@@ -14,8 +14,8 @@ public class C0232E {
 	}
 	
 	public static boolean isPalindrome(String s) {
-		return (s = s.replaceAll("[^\\w]", "")
-				.toLowerCase())
+		return (s = s.toLowerCase()
+				.replaceAll("[^a-z]", ""))
 				.equals(new StringBuffer(s).reverse().toString());
 	}
 
