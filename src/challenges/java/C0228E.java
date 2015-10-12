@@ -23,7 +23,7 @@ public class C0228E {
 	
 	public static StringBuilder sort(String s) {
 		return s.chars()
-				.sorted()
-				.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append);
+			.sorted()
+			.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append);
 	}
 }
