@@ -32,7 +32,8 @@ public class C0236E {
 		boolean valid = IntStream
 			.iterate(0, n -> n + chars.size())
 			.limit((int) (Math.ceil(bag.size() / chars.size())))
-			.allMatch(n -> bag.subList(n, n + chars.size() < THRESHOLD ? n + chars.size() : n + THRESHOLD - n)
+			.allMatch(n -> bag
+					.subList(n, n + chars.size() < THRESHOLD ? n + chars.size() : n + THRESHOLD - n)
 					.stream()
 					.distinct()
 					.count() == (n + chars.size() < THRESHOLD ? chars.size() : THRESHOLD - n));
