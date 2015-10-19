@@ -17,6 +17,10 @@ public class C0237E {
 	}
 	
 	public static String find(String keyboard, List<String> dict) {
+		/* .max can be replaced with
+		 * .sorted((w1, w2) -> Integer.compare(w1.length(), w2.length()))
+		 * .findFirst()
+		 */
 		return dict.stream()
 				.filter(word -> word.matches("[" + keyboard + "]+"))
 				.max(new Comparator<String>() {
