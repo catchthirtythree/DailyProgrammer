@@ -6,6 +6,7 @@
 package challenges.java;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
@@ -21,6 +22,7 @@ public class C0238I {
 	public static void main(String[] args) throws IOException {
 		try (Scanner scanner = new Scanner(System.in)) {
 			List<String> lines = Util.getLinesFromFile(Util.WORDLIST);
+			Collections.shuffle(lines);
 			
 			System.out.print("Choose a difficulty (0-4): ");
 			int difficulty = getWordLengthFromDifficulty(scanner.nextInt());
@@ -28,7 +30,7 @@ public class C0238I {
 			List<String> words = lines
 				.stream()
 				.filter(line -> line.length() == difficulty)
-				.sorted((s1, s2) -> Integer.compare(rand.nextInt(), rand.nextInt()))
+				//.sorted((s1, s2) -> Integer.compare(rand.nextInt(), rand.nextInt())) not transitive
 				.collect(Collectors.toList())
 				.subList(0, 10);
 			
