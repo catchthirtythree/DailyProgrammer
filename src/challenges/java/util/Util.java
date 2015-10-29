@@ -1,10 +1,10 @@
 package challenges.java.util;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Util {
 	public static final String WORDLIST = "ext/wordlist.txt";
@@ -16,14 +16,6 @@ public class Util {
 	 * @throws IOException
 	 */
 	public static List<String> getLinesFromFile(String filename) throws IOException {
-		List<String> lines = new ArrayList<String>();
-		BufferedReader reader = new BufferedReader(new FileReader(filename));
-		
-		String line;
-		while ((line = reader.readLine()) != null) {
-			lines.add(line);
-		} reader.close();
-		
-		return lines;
+		return Files.lines(Paths.get(filename)).collect(Collectors.toList());
 	}
 }
