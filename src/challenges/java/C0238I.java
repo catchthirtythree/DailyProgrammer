@@ -39,7 +39,7 @@ public class C0238I {
 			
 			int length = password.length();
 			for (int tries = 0; tries < GUESSES; ++tries) {
-				System.out.print("Choose a word: ");
+				System.out.printf("Guess (%d left): ", GUESSES - tries);
 				String guess = scanner.next().toLowerCase();
 				
 				long correct = guess(password, guess);
