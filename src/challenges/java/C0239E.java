@@ -10,7 +10,7 @@ import java.util.stream.IntStream;
 public class C0239E {
 	public static void main(String[] args) {
 		IntStream
-			.iterate(Integer.parseInt(args[0]), n -> (n % 3 == 0 ? n : (n + 1) % 3 == 0 ? ++n : --n) / 3)
+			.iterate(Integer.parseInt(args[0]), n -> (n + n % 3 - 1) / 3)
 			.peek(System.out::println)
 			.allMatch(n -> n > 1);
 	}
